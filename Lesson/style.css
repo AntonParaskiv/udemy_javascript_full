@@ -1,0 +1,10 @@
+* {
+    box-sizing: border-box;
+}
+#box {
+    display: inline-block;
+    vertical-align: top;
+    width: 100px;
+    height: 100px;
+    background: #ff6a30;
+}
