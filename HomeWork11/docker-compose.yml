@@ -1,8 +1,8 @@
 version: '3'
 services:
   web:
-    image: "php-apache-dev:7.2"
+    image: "webdevops/php-apache-dev"
     ports:
-      - "80:8080"
+      - "8080:80"
     volumes:
       - .:/app

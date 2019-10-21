@@ -6,46 +6,85 @@ const SelectorMoreButtons = ".more, .description-btn";
 const SelectorTabs = ".info-header-tab";
 const SelectorInfo = ".info-header";
 const SelectorTabContent = ".info-tabcontent";
+const SelectorFormModal = ".main-form";
+const SelectorFormContact = "#form";
 
 window.addEventListener("DOMContentLoaded", function() {
   // Tabs
   this.tabs = new Tabs(SelectorTabs, SelectorInfo, SelectorTabContent);
 
   // Timer
-  this.timer = new Timer("#timer", "2019-10-20 15:11");
+  this.timer = new Timer("#timer", "2019-10-21 16:11");
 
   // Modal
   this.modal = new Modal().SetOverlay(SelectorOverlay).SetClose(SelectorClose);
   this.moreButtons = new MoreButtons(this.modal, SelectorMoreButtons);
 
-  // Form
-  let message = {
-    loading: "Загрузка...",
-    success: "Спасибо! Скоро мы с вами свяжемся!",
-    failure: "Что-то пошло не так..."
-  };
+  // Form Modal
+  this.formModal = new Form(SelectorFormModal, "POST", "server.php");
 
-  let form = document.querySelector(".main-form"),
-    input = form.getElementsByTagName("input"),
-    statusMessage = document.createElement("div");
+  // Form Contact
+  this.formContact = new Form(SelectorFormContact, "POST", "server.php");
 
-  statusMessage.classList.add("status");
-
-  form.addEventListener("submit", function(event) {
-    event.preventDefault();
-    form.appendChild(statusMessage);
-
-    let request = new XMLHttpRequest();
-    request.open("POST", "server.php");
-    request.setRequestHeader(
-      "Content-Type",
-      "application/x-www-form-urlencoded"
-    );
-
-    let formData = new FormData(form);
-    request.send(formData);
-  });
+  // statusMessage.classList.add("status");
 });
+
+class Form {
+  constructor(formSelector, method, URL) {
+    this.method = method;
+    this.URL = URL;
+
+    this.form = document.querySelector(formSelector);
+    this.inputs = this.form.getElementsByTagName("input");
+    this.statusMessage = document.createElement("div");
+    this.statusMessage.classList.add("status");
+
+    this.message = {
+      loading: "Загрузка...",
+      success: "Спасибо! Скоро мы с вами свяжемся!",
+      failure: "Что-то пошло не так..."
+    };
+
+    this.setSubmitAction();
+  }
+  setSubmitAction() {
+    this.form.addEventListener("submit", event => {
+      event.preventDefault();
+      this.form.appendChild(this.statusMessage);
+
+      let request = new XMLHttpRequest();
+      request.open(this.method, this.URL);
+      request.setRequestHeader(
+        "Content-Type",
+        "application/json; charset=utf-8"
+      );
+
+      let formData = new FormData(this.form);
+
+      let obj = {};
+      formData.forEach(function(value, key) {
+        obj[key] = value;
+      });
+      let json = JSON.stringify(obj);
+
+      request.send(json);
+
+      request.addEventListener("readystatechange", () => {
+        if (request.readyState < 4) {
+          this.statusMessage.innerHTML = this.message.loading;
+        } else if (request.readyState == 4 && request.status == 200) {
+          this.statusMessage.innerHTML = this.message.success;
+        } else {
+          this.statusMessage.innerHTML = this.message.failure;
+        }
+      });
+
+      for (let i = 0; i < this.inputs.length; i++) {
+        this.inputs[i].value = "";
+      }
+    });
+  }
+}
 
 class Tabs {
   constructor(tabsSelector, infoSelector, tabContentSelector) {
